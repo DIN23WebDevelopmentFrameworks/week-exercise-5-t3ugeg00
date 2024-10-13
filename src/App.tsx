@@ -1,17 +1,53 @@
+import { useState, useEffect } from "react";
 
+import RecipeTagList from "./RecipeTagList";
+import RecipeList from "./RecipeList";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+
+import { IRecipe } from "./Recipe";
 const App = () => {
+  const [tagList, setTagList] = useState<string[]>([])
+  const [recipeList, setRecipeList] = useState<IRecipe[]>([])
+  const [areTagsOpened, setAreTagsOpened] = useState<boolean>(true)
 
+  useEffect(getTags, [])
+
+  function getTags(){
+    fetch("https://dummyjson.com/recipes/tags")
+    .then(data => data.json())
+    .then(json => setTagList(json))
+  }
+
+  function handleClickOnTag(tagName : string){
+    console.log("OPEN:::" + tagName)
+    setAreTagsOpened(false)
+    fetch(`https://dummyjson.com/recipes/tag/${tagName}`)
+    .then(data => data.json())
+    .then(json => setRecipeList(json.recipes))
+  }
 
   return (
     <div>
-        <h1>ACME Recipe O'Master</h1>
-        <div>Remove this and implement recipe tag list here. </div>
-        <ul>
-        <li>On start the application displays a list of recipe tags such as 'pasta', 'cookies' etc. The tag information is loaded from an API (https://dummyjson.com/recipes/tags)</li>
-        <li> The user can click on a tag and the application will then hide the tag list and display a list of recipes matching the selected tag. The recipe information for the clicked tag is loaded from an API (https://dummyjson.com/recipes/tag/Pizza).</li>
-        <li> User can also go back to the tag list. </li>
-        <li> Each receipe is displayed as box where recipe data such as ingredients and instructions are displayed</li>
-        </ul>
+      <h1>ACME Recipe O'Master</h1>
+      <BrowserRouter>
+          <div>
+          {areTagsOpened && ( 
+          <>
+            <h3>Choose a tag below</h3>
+            <RecipeTagList tagList={tagList} onSelectTag={handleClickOnTag}/>
+          </>
+        )}
+          </div>
+             <Routes>
+               {tagList.map(tagName => 
+               <Route 
+                  key={tagName}
+                  path={`/${tagName.toLowerCase()}`} 
+                  element={ <RecipeList recipes={recipeList}/> }
+                />)}
+            </Routes>
+      </BrowserRouter>
     </div>
   );
 };
